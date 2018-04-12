@@ -1,0 +1,7 @@
+body class="userwrapper"
+    h1  Welcome #{username}
+    br
+    h3 Create a New Grocery List!
+
+    form action="/user/" method="POST"
+        input type="text" name="listname" placeholder="List Name" reqiured='true'
