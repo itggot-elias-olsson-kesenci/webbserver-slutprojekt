@@ -28,7 +28,7 @@ class App < Sinatra::Base
 		redirect("/")
 	end
 
-	post '/login' do
+	post '/' do
 		login_username = params[:login_username]
 		login_password = params[:login_password]
 		
@@ -38,7 +38,6 @@ class App < Sinatra::Base
 
 		if hashed_password == login_password 
 			id = db.execute("SELECT id FROM login WHERE username =?", [login_username])[0][0]
-			#ANVÄND ID ISTÄLLET FÖR "TRUE" SÅ ATT DU KAN HÄMTA ID FÖR ATT SÄGA WELCOME "ID"	
 			session[:login] = id
 			redirect("/user")
 		else
@@ -58,17 +57,59 @@ class App < Sinatra::Base
 		session[:username] = login_username
 		slim(:user, locals:{username:login_username})
 	end
+	
+	get '/lists' do
+		login_id = session[:login]
+		login_username = session[:username]
+		db = SQLite3::Database.open("db/todo-app.sqlite")
+		lists_array = db.execute("SELECT ID, listname FROM lists WHERE userID =?", [login_id])
+		slim(:lists, locals:{username:login_username, lists_array:lists_array})
+	end
 
-	post '/user' do
+	get '/lists/:id' do
+		id = params[:id]
+		db = SQLite3::Database.open("db/todo-app.sqlite")
+		container = db.execute("SELECT groceryID FROM relation WHERE listID=?", [id])
+		n = 0
+		groceries = []
+			while n < container.length
+				id = container[n][0]
+				grocery = db.execute("SELECT name FROM groceries WHERE id=?", [id])
+				groceries.push(grocery)
+				n += 1
+			end
+		slim(:containing, locals:{groceries:groceries})
+	end	
+
+	post '/lists' do
 		listname = params[:listname]
-		ownerID = session[:login]
-		db = SQLite3::Database.open("db/todo-app.sqlite")		
-		db.execute("INSERT INTO lists (listname, ownerID) VALUES(?)", [listname, ownerID])
+		login_id = session[:login]
+		db = SQLite3::Database.open("db/todo-app.sqlite")
+		db.execute("INSERT INTO lists (listname, userID) VALUES(?, ?)", [listname, login_id])
 		redirect('/lists')
 	end
+
+	get '/groceries' do
+		db = SQLite3::Database.open("db/todo-app.sqlite")
+		groceries_array = db.execute("SELECT * FROM groceries")
+		slim(:groceries, locals:{groceries_array: groceries_array})
+	end
+
+	get '/groceries/:id' do
+		login_id = session[:login]
+		session[:groceryID] = params[:id]
+		groceryID = session[:groceryID]
+		db = SQLite3::Database.open("db/todo-app.sqlite")
+		grocery = db.execute("SELECT name FROM groceries WHERE id =?", [groceryID])[0][0]			
+		lists_array = db.execute("SELECT * FROM lists WHERE userID =?", [login_id])
+		slim(:grocery, locals:{lists_array:lists_array, grocery:grocery})
+	end
 	
-	 get '/lists' do
-		login_username = session[:username]
-		slim(:list, locals:{username:login_username})
+	get '/add/:id' do
+		listID = params[:id]
+		groceryID = session[:groceryID]	
+		db = SQLite3::Database.open("db/todo-app.sqlite")		
+		db.execute("INSERT INTO relation (listID, groceryID) VALUES(?, ?)", [listID, groceryID])
+		redirect('/groceries')
 	end
 end

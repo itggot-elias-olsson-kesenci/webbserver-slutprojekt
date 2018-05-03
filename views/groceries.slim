@@ -1,0 +1,11 @@
+body
+    br
+    br
+    - n = 0
+    - while n < groceries_array.length
+        - id = groceries_array[n][0]
+        a href='/groceries/#{id}'  = groceries_array[n][1]
+        p Approximate Cost: #{groceries_array[n][2]} SEK
+        br
+        br
+        - n += 1

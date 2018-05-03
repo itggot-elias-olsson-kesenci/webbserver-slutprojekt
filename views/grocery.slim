@@ -1,0 +1,11 @@
+body
+    h1 Add #{grocery} into desired lists
+    br
+    br
+    - n = 0
+    - while n < lists_array.length
+        - id = lists_array[n][0]
+        a href='/add/#{id}'  = lists_array[n][1]
+        br
+        br
+        - n += 1

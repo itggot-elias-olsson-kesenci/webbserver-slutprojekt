@@ -1,2 +1,18 @@
 body
+    h3 Create a New Grocery List!
+    form action="/lists" method="POST"
+        input type="text" name="listname" placeholder="Enter List Name" required='true'
+    br
+    a href="/groceries" Groceries
+    br
     h1 #{username}'s Lists
+    - n = 0
+    - while n < lists_array.length
+        - id = lists_array[n][0]
+        a href='/lists/#{id}'  = lists_array[n][1]
+        br
+        br
+        - n += 1
+
+        
+    
